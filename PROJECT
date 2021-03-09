@@ -3,6 +3,15 @@ layout: go.kubebuilder.io/v3
 multigroup: true
 projectName: edge-deploy
 repo: github.com/pbowden/edge-deploy
+resources:
+- crdVersion: v1
+  group: edge
+  kind: EdgeNode
+  version: v1alpha1
+- crdVersion: v1
+  group: edge
+  kind: EdgeDeployment
+  version: v1alpha1
 version: 3-alpha
 plugins:
   manifests.sdk.operatorframework.io/v2: {}

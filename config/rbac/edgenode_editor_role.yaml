@@ -1,0 +1,24 @@
+# permissions for end users to edit edgenodes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edgenode-editor-role
+rules:
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgenodes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgenodes/status
+  verbs:
+  - get

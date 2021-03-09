@@ -1,0 +1,11 @@
+apiVersion: edge.pete.dev/v1alpha1
+kind: EdgeDeployment
+metadata:
+  name: edgedeployment-sample
+spec:
+  # Add fields here
+  containers:
+    - name: nginx
+      image: someimage
+      ports:
+        - containerPort: 80
