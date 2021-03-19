@@ -25,7 +25,7 @@ import (
 
 // EdgePodTemplateSpec defines the desired state of EdgePodTemplate
 type EdgePodTemplateSpec struct {
-	Spec EdgePodSpec `json:"podspec"`
+	Spec EdgePodSpec `json:"spec"`
 }
 
 // EdgePodTemplateStatus defines the observed state of EdgePodTemplate

@@ -36,6 +36,49 @@ spec:
             type: string
           metadata:
             type: object
+          podspec:
+            properties:
+              apiversion:
+                type: string
+              kind:
+                type: string
+              metadata:
+                type: object
+              spec:
+                description: EdgePodSpec defines the desired state of EdgePod
+                properties:
+                  containers:
+                    items:
+                      description: EdgeContainer Object
+                      properties:
+                        image:
+                          type: string
+                        name:
+                          type: string
+                        ports:
+                          items:
+                            description: ContainerPort holds port information
+                            properties:
+                              containerPort:
+                                format: int32
+                                type: integer
+                              hostPort:
+                                format: int32
+                                type: integer
+                            required:
+                            - containerPort
+                            type: object
+                          type: array
+                      required:
+                      - image
+                      - name
+                      - ports
+                      type: object
+                    type: array
+                required:
+                - containers
+                type: object
+            type: object
           spec:
             description: EdgePodSpec defines the desired state of EdgePod
             properties:
@@ -73,8 +116,6 @@ spec:
           status:
             description: EdgePodStatus defines the observed state of EdgePod
             type: object
-        required:
-        - edgetarget
         type: object
     served: true
     storage: true

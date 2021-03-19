@@ -18,8 +18,11 @@ package edge
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
+	"github.com/prometheus/common/log"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,7 +53,37 @@ type EdgePodReconciler struct {
 func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("edgepod", req.NamespacedName)
 
-	// your logic here
+	edgePod := &edgev1alpha1.EdgePod{}
+	err := r.Get(ctx, req.NamespacedName, edgePod)
+
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			log.Info("EdgePod resource not found. Ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		log.Error(err, "Failed to get EdgePod")
+		return ctrl.Result{}, err
+	}
+
+	podspec := &edgev1alpha1.InternalPodspec{
+		ApiVersion: "v1",
+		Kind:       "Pod",
+		Spec:       edgePod.Spec,
+	}
+
+	if !reflect.DeepEqual(podspec, edgePod.Podspec) {
+		log.Info("Podspec has changed, updating internal field")
+		edgePod.Podspec = podspec
+		err = r.Update(ctx, edgePod)
+		if err != nil {
+			log.Error(err, "Failed to update EdgePod status")
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }

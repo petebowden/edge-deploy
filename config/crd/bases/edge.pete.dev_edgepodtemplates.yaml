@@ -36,7 +36,7 @@ spec:
           spec:
             description: EdgePodTemplateSpec defines the desired state of EdgePodTemplate
             properties:
-              podspec:
+              spec:
                 description: EdgePodSpec defines the desired state of EdgePod
                 properties:
                   containers:
@@ -71,7 +71,7 @@ spec:
                 - containers
                 type: object
             required:
-            - podspec
+            - spec
             type: object
           status:
             description: EdgePodTemplateStatus defines the observed state of EdgePodTemplate

@@ -24,3 +24,6 @@ testbin/*
 *.swo
 *.code-workspace
 *~
+
+.vscode/*
+!.vscode/launch.json

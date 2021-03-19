@@ -4,8 +4,13 @@ metadata:
   name: edgedeployment-sample
 spec:
   # Add fields here
-  containers:
-    - name: nginx
-      image: someimage
-      ports:
-        - containerPort: 80
+  edgenodes:
+    - testedgenode1
+    - testedgenode2
+  template:
+    spec:
+      containers:
+        - name: nginx
+          image: someimage
+          ports:
+            - containerPort: 80

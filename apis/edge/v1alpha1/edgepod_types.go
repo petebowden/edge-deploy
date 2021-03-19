@@ -42,9 +42,6 @@ type ContainerPort struct {
 	ContainerPort int32 `json:"containerPort"`
 }
 
-type EdgePodPodSpec struct {
-}
-
 // EdgePodStatus defines the observed state of EdgePod
 type EdgePodStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -59,9 +56,18 @@ type EdgePod struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Is this valid?
-	EdgeTarget string        `json:"edgetarget"`
-	Spec       EdgePodSpec   `json:"spec,omitempty"`
-	Status     EdgePodStatus `json:"status,omitempty"`
+	EdgeTarget string           `json:"edgetarget,omitempty"`
+	Podspec    *InternalPodspec `json:"podspec,omitempty"`
+
+	Spec   EdgePodSpec   `json:"spec,omitempty"`
+	Status EdgePodStatus `json:"status,omitempty"`
+}
+
+type InternalPodspec struct {
+	ApiVersion        string `json:"apiversion,omitempty"`
+	Kind              string `json:"kind,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              EdgePodSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true

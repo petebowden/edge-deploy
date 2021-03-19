@@ -57,6 +57,10 @@ manager: generate fmt vet
 run: generate fmt vet manifests
 	go run ./main.go
 
+run-delve: generate fmt vet manifests
+	go build ./main.go
+	dlv --listen 127.0.0.1:2345 --headless=true --api-version=2 --accept-multiclient exec ./main
+
 # Install CRDs into a cluster
 install: manifests kustomize
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -

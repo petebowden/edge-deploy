@@ -43,7 +43,7 @@ spec:
               template:
                 description: Edge Containers
                 properties:
-                  podspec:
+                  spec:
                     description: EdgePodSpec defines the desired state of EdgePod
                     properties:
                       containers:
@@ -78,7 +78,7 @@ spec:
                     - containers
                     type: object
                 required:
-                - podspec
+                - spec
                 type: object
             required:
             - edgenodes

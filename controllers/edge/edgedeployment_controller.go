@@ -22,13 +22,13 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/common/log"
 
-	corev1 "k8s.io/api/core/v1"
+	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
 )
 
 // DeploymentReconciler reconciles a EdgeDeployment object
@@ -70,26 +70,61 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	podSpec := &corev1.PodSpec{
-		Containers: []corev1.Container{
-			{
-				Name:  edgedeployment.Spec.Containers[0].Name,
-				Image: edgedeployment.Spec.Containers[0].Image,
-			},
-		},
+	foundPodSpec := &edgev1alpha1.EdgePod{}
+	requeue := false
+	// Loop through each edge node to see if it has a PodSpec
+	for _, edgeNodeName := range edgedeployment.Spec.EdgeNodes {
+		err = r.Get(ctx, types.NamespacedName{Name: getPodSpecName(edgeNodeName, edgedeployment.Name), Namespace: edgedeployment.Namespace}, foundPodSpec)
+		// If it doesn't have one, create it
+		if err != nil && errors.IsNotFound(err) {
+			podSpec := r.podSpecForDeployment(edgedeployment, edgeNodeName)
+			log.Info("Creating a new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+			err = r.Create(ctx, podSpec)
+			if err != nil {
+				log.Error(err, "Failed to create new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+				return ctrl.Result{}, err
+			}
+			// we created an object, we should requeue
+			requeue = true
+		} else if err != nil {
+			log.Error(err, "Failed to get PodSpec")
+			return ctrl.Result{}, err
+		}
+
 	}
-
-	edgedeployment.Status.Spec = *podSpec
-
-	// Update the spec
-	log.Info("Updating spec", "Spec", podSpec)
-	err = r.Status().Update(ctx, edgedeployment)
-	if err != nil {
-		log.Error(err, "Failed to update EdgeDeployment status")
-		return ctrl.Result{}, err
+	// PodSpecs created successfully, return and requeue
+	if requeue {
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *DeploymentReconciler) podSpecForDeployment(d *edgev1alpha1.EdgeDeployment, edgeNodeName string) *edgev1alpha1.EdgePod {
+	labels := labelsForEdgeDeployment(d.Name, edgeNodeName)
+	podSpecName := getPodSpecName(edgeNodeName, d.Name)
+	podSpec := &edgev1alpha1.EdgePod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podSpecName,
+			Namespace: d.Namespace,
+			Labels:    labels,
+		},
+		//Podspec:    edgev1alpha1.InternalPodspec{},
+		EdgeTarget: edgeNodeName,
+		Spec: edgev1alpha1.EdgePodSpec{
+			Containers: d.Spec.Template.Spec.Containers,
+		},
+	}
+	ctrl.SetControllerReference(d, podSpec, r.Scheme)
+	return podSpec
+}
+
+func getPodSpecName(edgeNode string, deploymentName string) string {
+	return edgeNode + "-" + deploymentName
+}
+
+func labelsForEdgeDeployment(deploymentName string, edgeNodeName string) map[string]string {
+	return map[string]string{"deploymentName": deploymentName, "edgeNode": edgeNodeName}
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -98,3 +133,24 @@ func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&edgev1alpha1.EdgeDeployment{}).
 		Complete(r)
 }
+
+// Check to see if the podSpecs exist, if not create them
+/* podSpecList := &v1alpha1.EdgePodList{}
+listOpts := []client.ListOption{
+	client.InNamespace(edgedeployment.Namespace),
+	client.MatchingLabels(labelsForEdgeDeployment(edgedeployment.Name)),
+}
+if err = r.List(ctx, podSpecList, listOpts...); err != nil {
+	log.Error(err, "Failed to list podspecs", "EdgeDeployment.Namespace", edgedeployment.Namespace, "EdgeDeployment.Name", edgedeployment.Name)
+} */
+
+//if len(podSpecList)
+
+/* napodSpec := &corev1.PodSpec{
+	Containers: []corev1.Container{
+		{
+			Name:  edgedeployment.Spec.Containers[0].Name,
+			Image: edgedeployment.Spec.Containers[0].Image,
+		},
+	},
+} */
