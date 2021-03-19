@@ -58,3 +58,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepods/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepods/status
+  verbs:
+  - get
+  - patch
+  - update

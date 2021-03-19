@@ -1,0 +1,24 @@
+# permissions for end users to edit edgepodtemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edgepodtemplate-editor-role
+rules:
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepodtemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepodtemplates/status
+  verbs:
+  - get

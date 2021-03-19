@@ -78,7 +78,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&edgecontrollers.EdgeNodeReconciler{
+	if err = (&edgecontrollers.NodeReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("edge").WithName("EdgeNode"),
 		Scheme: mgr.GetScheme(),
@@ -86,12 +86,20 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "EdgeNode")
 		os.Exit(1)
 	}
-	if err = (&edgecontrollers.EdgeDeploymentReconciler{
+	if err = (&edgecontrollers.DeploymentReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("edge").WithName("EdgeDeployment"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "EdgeDeployment")
+		os.Exit(1)
+	}
+	if err = (&edgecontrollers.EdgePodReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("edge").WithName("EdgePod"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "EdgePod")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

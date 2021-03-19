@@ -31,8 +31,8 @@ import (
 	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
 )
 
-// EdgeDeploymentReconciler reconciles a EdgeDeployment object
-type EdgeDeploymentReconciler struct {
+// DeploymentReconciler reconciles a EdgeDeployment object
+type DeploymentReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -51,7 +51,7 @@ type EdgeDeploymentReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
-func (r *EdgeDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("edgedeployment", req.NamespacedName)
 
 	edgedeployment := &edgev1alpha1.EdgeDeployment{}
@@ -93,7 +93,7 @@ func (r *EdgeDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *EdgeDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&edgev1alpha1.EdgeDeployment{}).
 		Complete(r)

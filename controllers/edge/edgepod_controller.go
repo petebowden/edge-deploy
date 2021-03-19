@@ -27,28 +27,28 @@ import (
 	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
 )
 
-// NodeReconciler reconciles a EdgeNode object
-type NodeReconciler struct {
+// EdgePodReconciler reconciles a EdgePod object
+type EdgePodReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgenodes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgenodes/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgenodes/finalizers,verbs=update
+// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgepods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgepods/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=edge.pete.dev,resources=edgepods/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the EdgeNode object against the actual cluster state, and then
+// the EdgePod object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
-func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("edgenode", req.NamespacedName)
+func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	_ = r.Log.WithValues("edgepod", req.NamespacedName)
 
 	// your logic here
 
@@ -56,8 +56,8 @@ func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *EdgePodReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&edgev1alpha1.EdgeNode{}).
+		For(&edgev1alpha1.EdgePod{}).
 		Complete(r)
 }

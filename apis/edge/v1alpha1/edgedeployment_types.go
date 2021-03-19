@@ -17,35 +17,21 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EdgeDeploymentSpec defines the desired state of EdgeDeployment
 type EdgeDeploymentSpec struct {
 	// Edge Containers
-	Containers []EdgeContainer `json:"containers"`
-}
-
-// EdgeContainer Object
-type EdgeContainer struct {
-	Name  string          `json:"name"`
-	Image string          `json:"image"`
-	Ports []ContainerPort `json:"ports"`
-}
-
-// ContainerPort holds port information
-type ContainerPort struct {
-	// +optional
-	HostPort      int32 `json:"hostPort"`
-	ContainerPort int32 `json:"containerPort"`
+	Template  EdgePodTemplateSpec `json:"template"`
+	EdgeNodes []string            `json:"edgenodes"`
 }
 
 // EdgeDeploymentStatus defines the observed state of EdgeDeployment
 type EdgeDeploymentStatus struct {
 	// +kubebuilder:validation:XEmbeddedResource
 	// Using Podspec for now. Will eventually need to create another CRD
-	Spec corev1.PodSpec `json:"podspec,omitempty"`
+	//Spec corev1.PodSpec `json:"podspec,omitempty"`
 }
 
 // +kubebuilder:object:root=true

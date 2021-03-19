@@ -2,4 +2,5 @@
 resources:
 - edge_v1alpha1_edgenode.yaml
 - edge_v1alpha1_edgedeployment.yaml
+- edge_v1alpha1_edgepod.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

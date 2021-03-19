@@ -1,0 +1,7 @@
+apiVersion: edge.pete.dev/v1alpha1
+kind: EdgePod
+metadata:
+  name: edgepod-sample
+spec:
+  # Add fields here
+  foo: bar

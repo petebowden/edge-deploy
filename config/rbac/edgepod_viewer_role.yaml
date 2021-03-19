@@ -1,0 +1,20 @@
+# permissions for end users to view edgepods.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: edgepod-viewer-role
+rules:
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - edge.pete.dev
+  resources:
+  - edgepods/status
+  verbs:
+  - get
