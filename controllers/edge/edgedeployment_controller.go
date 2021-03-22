@@ -19,6 +19,7 @@ package edge
 import (
 	"context"
 	"reflect"
+	"sort"
 
 	"github.com/go-logr/logr"
 
@@ -71,8 +72,59 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	foundPodSpec := &edgev1alpha1.EdgePod{}
 	//requeue := false
+
+	// Get a list of all EdgePods affiliated with this deployment
+	edgePodList := &edgev1alpha1.EdgePodList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(edgedeployment.Namespace),
+		client.MatchingLabels(map[string]string{"deploymentName": edgedeployment.Name}),
+	}
+	if err = r.List(ctx, edgePodList, listOpts...); err != nil {
+		log.Error(err, "Failed to list edgePods", "edgedeployment.Namespace", edgedeployment.Namespace, "edgedeployment.Name", edgedeployment.Name)
+		return ctrl.Result{}, err
+	}
+	// Sort the list
+	sort.Slice(edgePodList.Items, func(i, j int) bool {
+		return edgePodList.Items[i].Name < edgePodList.Items[j].Name
+	})
+	// Compare the lists, updating or deleting as needed
+	listEdgeNodes := edgedeployment.Spec.EdgeNodes
+	sort.Slice(listEdgeNodes, func(i, j int) bool {
+		return listEdgeNodes[i] < listEdgeNodes[j]
+	})
+
+	i, j := 0, 0
+	for i < len(listEdgeNodes) && j < len(edgePodList.Items) {
+		// Is there an edgePod for this Deployment / Edge Node
+		if listEdgeNodes[i] == edgePodList.Items[j].Name {
+			// Is it up to date?
+			//TODO: compare
+			i, j = i+1, j+1
+
+		} else if listEdgeNodes[i] > edgePodList.Items[j].Name {
+			// Do we need to delete the mismatch?
+			// Yes
+			// Delete edgePodList.Items[j]
+			j++
+		} else {
+			// No existing edgePod for Deployment / Edge Node
+			// todo: create
+			i++
+		}
+	}
+
+	for ; i < len(listEdgeNodes); i++ {
+		//Create remaining EdgePods
+		//TODO: Implement
+	}
+
+	for ; j < len(edgePodList.Items); j++){
+		// Delete remaining uneeded EdgePods
+		//TODO: Implement
+	}
+
+	foundPodSpec := &edgev1alpha1.EdgePod{}
 	// Loop through each edge node to see if it has a PodSpec
 	for _, edgeNodeName := range edgedeployment.Spec.EdgeNodes {
 		log.Info("EdgeNode Loop", "Name", edgeNodeName)

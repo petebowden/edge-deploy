@@ -18,7 +18,6 @@ package edge
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -47,6 +46,7 @@ type EdgePodReconciler struct {
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
+// TODO: implement finalizer to clean up resources? Needed for a push model
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
 func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -68,14 +68,14 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	podspec := &edgev1alpha1.InternalPodspec{
+	/* podspec := &edgev1alpha1.InternalPodspec{
 		ApiVersion: "v1",
 		Kind:       "Pod",
 		//ObjectMeta: edgePod.ObjectMeta,
 		Spec: edgePod.Spec,
-	}
+	} */
 
-	if !reflect.DeepEqual(podspec, edgePod.Podspec) {
+	/* if !reflect.DeepEqual(podspec, edgePod.Podspec) {
 		log.Info("Podspec has changed, updating internal field", "PodSpec.Namespace", edgePod.Namespace, "edgePod.Name", edgePod.Name)
 		edgePod.Podspec = podspec
 		err = r.Update(ctx, edgePod)
@@ -83,7 +83,7 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Error(err, "Failed to update EdgePod status")
 			return ctrl.Result{}, err
 		}
-	}
+	} */
 
 	return ctrl.Result{}, nil
 }
