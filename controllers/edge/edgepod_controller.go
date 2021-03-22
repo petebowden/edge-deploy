@@ -21,7 +21,6 @@ import (
 	"reflect"
 
 	"github.com/go-logr/logr"
-	"github.com/prometheus/common/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,7 +50,7 @@ type EdgePodReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
 func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("edgepod", req.NamespacedName)
+	log := r.Log.WithValues("edgepod", req.NamespacedName)
 
 	edgePod := &edgev1alpha1.EdgePod{}
 	err := r.Get(ctx, req.NamespacedName, edgePod)
@@ -72,11 +71,12 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	podspec := &edgev1alpha1.InternalPodspec{
 		ApiVersion: "v1",
 		Kind:       "Pod",
-		Spec:       edgePod.Spec,
+		//ObjectMeta: edgePod.ObjectMeta,
+		Spec: edgePod.Spec,
 	}
 
 	if !reflect.DeepEqual(podspec, edgePod.Podspec) {
-		log.Info("Podspec has changed, updating internal field")
+		log.Info("Podspec has changed, updating internal field", "PodSpec.Namespace", edgePod.Namespace, "edgePod.Name", edgePod.Name)
 		edgePod.Podspec = podspec
 		err = r.Update(ctx, edgePod)
 		if err != nil {

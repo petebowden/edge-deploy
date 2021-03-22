@@ -42,10 +42,8 @@ spec:
                 type: string
               kind:
                 type: string
-              metadata:
-                type: object
               spec:
-                description: EdgePodSpec defines the desired state of EdgePod
+                description: "\tmetav1.ObjectMeta `json:\"metadata,omitempty\"`"
                 properties:
                   containers:
                     items:

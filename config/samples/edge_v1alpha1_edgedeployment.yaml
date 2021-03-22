@@ -1,16 +1,17 @@
 apiVersion: edge.pete.dev/v1alpha1
 kind: EdgeDeployment
 metadata:
-  name: edgedeployment-sample
+  name: edgedeployment-sample2
 spec:
   # Add fields here
   edgenodes:
     - testedgenode1
     - testedgenode2
+    - testedgenode3
   template:
     spec:
       containers:
         - name: nginx
           image: someimage
           ports:
-            - containerPort: 80
+            - containerPort: 8022

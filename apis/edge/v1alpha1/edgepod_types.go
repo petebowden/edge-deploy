@@ -64,10 +64,10 @@ type EdgePod struct {
 }
 
 type InternalPodspec struct {
-	ApiVersion        string `json:"apiversion,omitempty"`
-	Kind              string `json:"kind,omitempty"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              EdgePodSpec `json:"spec,omitempty"`
+	ApiVersion string `json:"apiversion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	//	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec EdgePodSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true
