@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -57,8 +56,8 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	log.Info("Reconcile", "request Namespace", req.Namespace, "request Name", req.Name)
 
-	edgedeployment := &edgev1alpha1.EdgeDeployment{}
-	err := r.Get(ctx, req.NamespacedName, edgedeployment)
+	foundEdgeDeployment := &edgev1alpha1.EdgeDeployment{}
+	err := r.Get(ctx, req.NamespacedName, foundEdgeDeployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -75,94 +74,139 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	//requeue := false
 
 	// Get a list of all EdgePods affiliated with this deployment
-	edgePodList := &edgev1alpha1.EdgePodList{}
+	foundEdgePodList := &edgev1alpha1.EdgePodList{}
 	listOpts := []client.ListOption{
-		client.InNamespace(edgedeployment.Namespace),
-		client.MatchingLabels(map[string]string{"deploymentName": edgedeployment.Name}),
+		client.InNamespace(foundEdgeDeployment.Namespace),
+		client.MatchingLabels(map[string]string{"deploymentName": foundEdgeDeployment.Name}),
 	}
-	if err = r.List(ctx, edgePodList, listOpts...); err != nil {
-		log.Error(err, "Failed to list edgePods", "edgedeployment.Namespace", edgedeployment.Namespace, "edgedeployment.Name", edgedeployment.Name)
+	if err = r.List(ctx, foundEdgePodList, listOpts...); err != nil {
+		log.Error(err, "Failed to list edgePods", "edgedeployment.Namespace", foundEdgeDeployment.Namespace, "edgedeployment.Name", foundEdgeDeployment.Name)
 		return ctrl.Result{}, err
 	}
 	// Sort the list
-	sort.Slice(edgePodList.Items, func(i, j int) bool {
-		return edgePodList.Items[i].Name < edgePodList.Items[j].Name
+	sort.Slice(foundEdgePodList.Items, func(i, j int) bool {
+		return foundEdgePodList.Items[i].Name > foundEdgePodList.Items[j].Name
 	})
 	// Compare the lists, updating or deleting as needed
-	listEdgeNodes := edgedeployment.Spec.EdgeNodes
+	listEdgeNodes := foundEdgeDeployment.Spec.EdgeNodes
 	sort.Slice(listEdgeNodes, func(i, j int) bool {
-		return listEdgeNodes[i] < listEdgeNodes[j]
+		return listEdgeNodes[i] > listEdgeNodes[j]
 	})
 
+	// Var to hold if we need to requeue after creating objects
+	requeue := false
+
 	i, j := 0, 0
-	for i < len(listEdgeNodes) && j < len(edgePodList.Items) {
+	for i < len(listEdgeNodes) && j < len(foundEdgePodList.Items) {
 		// Is there an edgePod for this Deployment / Edge Node
-		if listEdgeNodes[i] == edgePodList.Items[j].Name {
+		edgeNodePodName := getPodSpecName(listEdgeNodes[i], foundEdgeDeployment.Name)
+		if edgeNodePodName == foundEdgePodList.Items[j].Name {
 			// Is it up to date?
-			//TODO: compare
+			// Does EdgePod Spec match the deployment Spec?
+			if !reflect.DeepEqual(foundEdgePodList.Items[j].Spec, foundEdgeDeployment.Spec.Template.Spec) {
+				// Doesn't match, update
+				foundEdgePodList.Items[j].Spec = foundEdgeDeployment.Spec.Template.Spec
+				err = r.Update(ctx, &foundEdgePodList.Items[j])
+				if err != nil {
+					log.Error(err, "Failed to update EdgePod status")
+					return ctrl.Result{}, err
+				}
+			}
+			//increment both pointers
 			i, j = i+1, j+1
 
-		} else if listEdgeNodes[i] > edgePodList.Items[j].Name {
+		} else if edgeNodePodName < foundEdgePodList.Items[j].Name {
 			// Do we need to delete the mismatch?
 			// Yes
-			// Delete edgePodList.Items[j]
+			err = r.Delete(ctx, &foundEdgePodList.Items[j])
+			if err != nil {
+				log.Error(err, "Failed to delete EdgePod status")
+				return ctrl.Result{}, err
+			}
 			j++
 		} else {
 			// No existing edgePod for Deployment / Edge Node
-			// todo: create
-			i++
-		}
-	}
-
-	for ; i < len(listEdgeNodes); i++ {
-		//Create remaining EdgePods
-		//TODO: Implement
-	}
-
-	for ; j < len(edgePodList.Items); j++){
-		// Delete remaining uneeded EdgePods
-		//TODO: Implement
-	}
-
-	foundPodSpec := &edgev1alpha1.EdgePod{}
-	// Loop through each edge node to see if it has a PodSpec
-	for _, edgeNodeName := range edgedeployment.Spec.EdgeNodes {
-		log.Info("EdgeNode Loop", "Name", edgeNodeName)
-		err = r.Get(ctx, types.NamespacedName{Name: getPodSpecName(edgeNodeName, edgedeployment.Name), Namespace: edgedeployment.Namespace}, foundPodSpec)
-		// If it doesn't have one, create it
-		if err != nil && errors.IsNotFound(err) {
-			podSpec := r.podSpecForDeployment(edgedeployment, edgeNodeName)
+			podSpec := r.podSpecForDeployment(foundEdgeDeployment, listEdgeNodes[i])
+			ctrl.SetControllerReference(foundEdgeDeployment, podSpec, r.Scheme)
 			log.Info("Creating a new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
 			err = r.Create(ctx, podSpec)
 			if err != nil {
 				log.Error(err, "Failed to create new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
 				return ctrl.Result{}, err
 			}
-			// we created an object, we should requeue
-			return ctrl.Result{Requeue: true}, nil
-
-			//			requeue = true
-		} else if err != nil {
-			log.Error(err, "Failed to get PodSpec")
-			return ctrl.Result{}, err
-		} else {
-			// Found a podspec, does it match the deployment spec?
-			edgePod := r.podSpecForDeployment(edgedeployment, edgeNodeName)
-			if !reflect.DeepEqual(foundPodSpec.Spec, edgePod.Spec) {
-				log.Info("EdgePod doesn't match Deployment. Updating EdgePod ", "PodSpec.Namespace ", foundPodSpec.Namespace, "PodSpec.Name ", foundPodSpec.Name)
-				foundPodSpec.Spec = edgePod.Spec
-				err = r.Update(ctx, foundPodSpec)
-				if err != nil {
-					log.Error(err, "Failed to update EdgePod status")
-					return ctrl.Result{}, err
-				}
-				return ctrl.Result{Requeue: true}, nil
-
-				//				requeue = true
-			}
-			//return ctrl.Result{}, err
+			requeue = true
+			i++
 		}
 	}
+
+	for ; i < len(listEdgeNodes); i++ {
+		//Create remaining EdgePods
+		podSpec := r.podSpecForDeployment(foundEdgeDeployment, listEdgeNodes[i])
+		ctrl.SetControllerReference(foundEdgeDeployment, podSpec, r.Scheme)
+		log.Info("Creating a new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+		err = r.Create(ctx, podSpec)
+		if err != nil {
+			log.Error(err, "Failed to create new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+			return ctrl.Result{}, err
+		}
+		requeue = true
+		i++
+	}
+
+	for ; j < len(foundEdgePodList.Items); j++ {
+		// Delete remaining uneeded EdgePods
+		err = r.Delete(ctx, &foundEdgePodList.Items[j])
+		if err != nil {
+			log.Error(err, "Failed to delete EdgePod status")
+			return ctrl.Result{}, err
+		}
+		j++
+	}
+
+	if requeue {
+		return ctrl.Result{Requeue: true}, nil
+	}
+	/*
+		foundPodSpec := &edgev1alpha1.EdgePod{}
+		// Loop through each edge node to see if it has a PodSpec
+		for _, edgeNodeName := range foundEdgeDeployment.Spec.EdgeNodes {
+			log.Info("EdgeNode Loop", "Name", edgeNodeName)
+			err = r.Get(ctx, types.NamespacedName{Name: getPodSpecName(edgeNodeName, foundEdgeDeployment.Name), Namespace: foundEdgeDeployment.Namespace}, foundPodSpec)
+			// If it doesn't have one, create it
+			if err != nil && errors.IsNotFound(err) {
+				podSpec := r.podSpecForDeployment(foundEdgeDeployment, edgeNodeName)
+				ctrl.SetControllerReference(foundEdgeDeployment, podSpec, r.Scheme)
+				log.Info("Creating a new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+				err = r.Create(ctx, podSpec)
+				if err != nil {
+					log.Error(err, "Failed to create new PodSpec", "PodSpec.Namespace", podSpec.Namespace, "PodSpec.Name", podSpec.Name)
+					return ctrl.Result{}, err
+				}
+				// we created an object, we should requeue
+				return ctrl.Result{Requeue: true}, nil
+
+				//			requeue = true
+			} else if err != nil {
+				log.Error(err, "Failed to get PodSpec")
+				return ctrl.Result{}, err
+			} else {
+				// Found a podspec, does it match the deployment spec?
+				edgePod := r.podSpecForDeployment(foundEdgeDeployment, edgeNodeName)
+				if !reflect.DeepEqual(foundPodSpec.Spec, edgePod.Spec) {
+					log.Info("EdgePod doesn't match Deployment. Updating EdgePod ", "PodSpec.Namespace ", foundPodSpec.Namespace, "PodSpec.Name ", foundPodSpec.Name)
+					foundPodSpec.Spec = edgePod.Spec
+					err = r.Update(ctx, foundPodSpec)
+					if err != nil {
+						log.Error(err, "Failed to update EdgePod status")
+						return ctrl.Result{}, err
+					}
+					return ctrl.Result{Requeue: true}, nil
+
+					//				requeue = true
+				}
+				//return ctrl.Result{}, err
+			}
+		} */
 	// PodSpecs created/updated successfully, return and requeue
 	/* 	if requeue {
 		return ctrl.Result{Requeue: true}, nil
@@ -186,7 +230,7 @@ func (r *DeploymentReconciler) podSpecForDeployment(d *edgev1alpha1.EdgeDeployme
 			Containers: d.Spec.Template.Spec.Containers,
 		},
 	}
-	ctrl.SetControllerReference(d, podSpec, r.Scheme)
+	//ctrl.SetControllerReference(d, podSpec, r.Scheme)
 	return podSpec
 }
 

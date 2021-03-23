@@ -5,6 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch test package",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}"
+        },
+        {
+            "name": "Debug test package",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+         //   "remotePath": "",
+     //       "port": 2345,
+      //      "host": "127.0.0.1",
+            "program": "${workspaceRoot}/controllers/edge/",
+            "env": {
+                "KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT":"true",
+                "KUBEBUILDER_ASSETS":"${workspaceFolder}/testbin/bin",
+            },
+            "showLog": true,
+            "args": ["./..."]
+            
+        },
+
+        
+        {
             "name": "Connect to server",
             "type": "go",
             "request": "attach",
