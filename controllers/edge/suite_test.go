@@ -32,7 +32,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
+	edgev1alpha1 "github.com/petebowden/edge-deploy/apis/edge/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -83,6 +83,13 @@ var _ = BeforeSuite(func(done Done) {
 	err = (&DeploymentReconciler{
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("DeploymentReconciler"),
+		Scheme: scheme.Scheme,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&EdgePodReconciler{
+		Client: k8sManager.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("EdgePodReconciler"),
 		Scheme: scheme.Scheme,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())

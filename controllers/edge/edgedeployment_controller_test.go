@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
+	edgev1alpha1 "github.com/petebowden/edge-deploy/apis/edge/v1alpha1"
 )
 
 var _ = Describe("EdgeDeployment controller logic", func() {

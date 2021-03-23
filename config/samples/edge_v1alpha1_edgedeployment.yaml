@@ -7,11 +7,11 @@ spec:
   edgenodes:
     - testedgenode1
     - testedgenode2
-    - testedgenode3
+    - testedgenode5
   template:
     spec:
       containers:
         - name: nginx
           image: someimage
           ports:
-            - containerPort: 8022
+            - containerPort: 8023

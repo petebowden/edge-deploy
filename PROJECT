@@ -2,7 +2,7 @@ domain: pete.dev
 layout: go.kubebuilder.io/v3
 multigroup: true
 projectName: edge-deploy
-repo: github.com/pbowden/edge-deploy
+repo: github.com/petebowden/edge-deploy
 resources:
 - crdVersion: v1
   group: edge

@@ -31,8 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
-	edgecontrollers "github.com/pbowden/edge-deploy/controllers/edge"
+	edgev1alpha1 "github.com/petebowden/edge-deploy/apis/edge/v1alpha1"
+	edgecontrollers "github.com/petebowden/edge-deploy/controllers/edge"
 	// +kubebuilder:scaffold:imports
 )
 

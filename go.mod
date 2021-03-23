@@ -1,4 +1,4 @@
-module github.com/pbowden/edge-deploy
+module github.com/petebowden/edge-deploy
 
 go 1.15
 

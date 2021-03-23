@@ -18,6 +18,7 @@ package edge
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -25,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	edgev1alpha1 "github.com/pbowden/edge-deploy/apis/edge/v1alpha1"
+	edgev1alpha1 "github.com/petebowden/edge-deploy/apis/edge/v1alpha1"
 )
 
 // EdgePodReconciler reconciles a EdgePod object
@@ -68,14 +69,14 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	/* podspec := &edgev1alpha1.InternalPodspec{
+	podspec := &edgev1alpha1.InternalPodspec{
 		ApiVersion: "v1",
 		Kind:       "Pod",
 		//ObjectMeta: edgePod.ObjectMeta,
 		Spec: edgePod.Spec,
-	} */
+	}
 
-	/* if !reflect.DeepEqual(podspec, edgePod.Podspec) {
+	if !reflect.DeepEqual(podspec, edgePod.Podspec) {
 		log.Info("Podspec has changed, updating internal field", "PodSpec.Namespace", edgePod.Namespace, "edgePod.Name", edgePod.Name)
 		edgePod.Podspec = podspec
 		err = r.Update(ctx, edgePod)
@@ -83,7 +84,7 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Error(err, "Failed to update EdgePod status")
 			return ctrl.Result{}, err
 		}
-	} */
+	}
 
 	return ctrl.Result{}, nil
 }
