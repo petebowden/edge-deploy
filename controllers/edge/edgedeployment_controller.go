@@ -104,7 +104,7 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 			// Does EdgePod Spec match the deployment Spec?
 			if !reflect.DeepEqual(foundEdgePodList.Items[j].Spec, foundEdgeDeployment.Spec.Template.Spec) {
-
+				log.Info("Updating EdgePod", "EdgePod.Name", foundEdgePodList.Items[j].Name)
 				// Doesn't match, update
 				foundEdgePodList.Items[j].Spec = foundEdgeDeployment.Spec.Template.Spec
 				err = r.Update(ctx, &foundEdgePodList.Items[j])

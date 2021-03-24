@@ -72,7 +72,9 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	podspec := &edgev1alpha1.InternalPodspec{
 		ApiVersion: "v1",
 		Kind:       "Pod",
-		//ObjectMeta: edgePod.ObjectMeta,
+		ObjectMeta: edgev1alpha1.ObjectMeta{
+			Name: edgePod.GetObjectMeta().GetName(),
+		},
 		Spec: edgePod.Spec,
 	}
 
@@ -84,6 +86,7 @@ func (r *EdgePodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Error(err, "Failed to update EdgePod status")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return ctrl.Result{}, nil

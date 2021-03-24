@@ -66,8 +66,13 @@ type EdgePod struct {
 type InternalPodspec struct {
 	ApiVersion string `json:"apiversion,omitempty"`
 	Kind       string `json:"kind,omitempty"`
-	//	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec EdgePodSpec `json:"spec,omitempty"`
+	// You can't update the name field of metav1.ObjectMeta, so we need our own.
+	ObjectMeta `json:"metadata,omitempty"`
+	Spec       EdgePodSpec `json:"spec,omitempty"`
+}
+
+type ObjectMeta struct {
+	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true

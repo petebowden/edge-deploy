@@ -42,8 +42,15 @@ spec:
                 type: string
               kind:
                 type: string
+              metadata:
+                description: You can't update the name field of metav1.ObjectMeta,
+                  so we need our own.
+                properties:
+                  name:
+                    type: string
+                type: object
               spec:
-                description: "\tmetav1.ObjectMeta `json:\"metadata,omitempty\"`"
+                description: EdgePodSpec defines the desired state of EdgePod
                 properties:
                   containers:
                     items:
