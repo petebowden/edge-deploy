@@ -143,7 +143,6 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			return ctrl.Result{}, err
 		}
 		requeue = true
-		i++
 	}
 
 	// Delete remaining uneeded EdgePods
@@ -153,11 +152,11 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "Failed to delete EdgePod status")
 			return ctrl.Result{}, err
 		}
-		j++
 	}
 
 	if requeue {
-		return ctrl.Result{Requeue: true}, nil
+		//	return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil

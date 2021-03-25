@@ -1,7 +1,7 @@
 apiVersion: edge.pete.dev/v1alpha1
 kind: EdgeDeployment
 metadata:
-  name: edgedeployment-sample2
+  name: edgedeployment-sample
 spec:
   # Add fields here
   edgenodes:
