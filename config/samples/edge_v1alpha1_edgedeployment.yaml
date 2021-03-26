@@ -5,13 +5,14 @@ metadata:
 spec:
   # Add fields here
   edgenodes:
-    - testedgenode1
+    - edgenode1
     - testedgenode2
     - testedgenode5
   template:
     spec:
       containers:
         - name: nginx
-          image: someimage
+          image: gcr.io/google-containers/echoserver:1.10
           ports:
-            - containerPort: 8023
+            - containerPort: 8080
+              hostPort: 9091
